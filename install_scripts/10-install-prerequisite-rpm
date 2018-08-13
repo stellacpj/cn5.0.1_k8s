@@ -1,0 +1,11 @@
+#!/bin/bash
+
+for host in $(cat ~/contrail-ansible-deployer/config/all_hosts); do
+(./config/sshpass -p contrail123 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error $host <<'EOF'
+
+yum -y install git ansible-2.4.2.0 python2-pip gcc python-devel net-tools wget
+
+EOF
+) &
+done
+wait

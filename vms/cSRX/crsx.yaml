@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: crsx
+spec:
+  containers:
+  - name: csrx
+    image: hub.juniper.net/security/csrx:18.1R1.9
+  imagePullSecrets:
+    - name: myregistrykey

@@ -1,0 +1,91 @@
+<domain type='kvm'>
+  <name>{{ item.0 }}-pfe</name>
+  <memory unit="MB">8192</memory>
+  <memoryBacking>
+    <hugepages/>
+    <nosharepages/>
+  </memoryBacking>
+  <vcpu placement='static'>4</vcpu>
+  <numatune>
+    <memory mode='strict' nodeset='0'/>
+  </numatune>
+  <os>
+    <type arch='x86_64' machine='pc-i440fx-rhel7.0.0'>hvm</type>
+    <boot dev='hd'/>
+  </os>
+  <features>
+    <acpi/>
+  </features>
+  <cpu mode="host-model">
+    <topology cores="4" sockets="1" threads="1" />
+  </cpu>
+  <clock offset='utc'/>
+  <on_poweroff>destroy</on_poweroff>
+  <on_reboot>restart</on_reboot>
+  <on_crash>restart</on_crash>
+  <devices>
+    <emulator>/usr/libexec/qemu-kvm</emulator>
+    <disk type='file' device='disk'>
+      <driver name='qemu' type='raw' cache='directsync'/>
+      <source file='/var/lib/libvirt/images/{{ item.0 }}-pfe.img'/>
+      <target dev='hda' bus='ide'/>
+    </disk>
+    <controller type='pci' index='0' model='pci-root' />
+    <controller type='usb' index='0' model='piix3-uhci' />
+    <controller type='ide' index='0' />
+    <interface type='network'>
+      <source network='br-data' portgroup='vlan-60-mgmt'/>
+      <virtualport type='openvswitch'/>
+      <target dev='{{ item.0 }}-pfe-em0'/>
+      <model type='virtio'/>
+    </interface>
+    <interface type='network'>
+      <source network='br-data' portgroup='{{ item.0 }}-internal'/>
+      <virtualport type='openvswitch'/>
+      <target dev='{{ item.0 }}-pfe-em1'/>
+      <model type='virtio'/>
+    </interface>
+{% if os_compute.type == "virtual" %}
+    <interface type='bridge'>
+      <source bridge='br-internalapi'/>
+      <target dev='{{ item.0 }}-xe0'/>
+      <model type='virtio'/>
+    </interface>
+{% elif os_compute.type == "physical" %}
+    <interface type='network'>
+      <source network='br-data' portgroup='vlan-20-intapi'/>
+      <virtualport type='openvswitch'/>
+      <target dev='{{ item.0 }}-xe0'/>
+      <model type='virtio'/>
+    </interface>
+{% endif %}
+    <interface type='network'>
+      <source network='br-data' portgroup='vlan-80-mxext'/>
+      <virtualport type='openvswitch'/>
+      <target dev='{{ item.0 }}-xe1'/>
+      <model type='virtio'/>
+    </interface>
+{% if os_compute.type == "virtual" %}
+    <interface type='network'>
+      <source network='br-demo' portgroup='trunk-all'/>
+      <virtualport type='openvswitch'/>
+      <target dev='{{ item.0 }}-xe2'/>
+      <model type='virtio'/>
+    </interface>
+{% endif %}
+    <serial type='pty'>
+      <target port='0'/>
+    </serial>
+    <console type='pty'>
+      <target type='serial' port='0'/>
+    </console>
+    <input type='tablet' bus='usb' />
+    <input type='mouse' bus='ps2' />
+    <input type='keyboard' bus='ps2' />
+    <sound model='ac97' />
+    <video>
+      <model type='cirrus' vram='16384' heads='1' primary='yes'/>
+    </video>
+    <memballoon model='virtio' />
+  </devices>
+</domain>

@@ -1,0 +1,3 @@
+#!/bin/bash
+
+python config/update_instance.py

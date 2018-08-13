@@ -1,0 +1,25 @@
+[base]
+name=CentOS-7 - Base
+baseurl=http://localhost:10080/repo/os/
+gpgcheck=0
+
+[updates]
+name=CentOS-7 - Updates
+baseurl=http://localhost:10080/repo/updates/
+gpgcheck=0
+
+[extras]
+name=CentOS-7 - Extras
+baseurl=http://localhost:10080/repo/extras/
+gpgcheck=0
+
+[centos-openstack-ocata]
+name=CentOS-7 - OpenStack ocata
+baseurl=http://localhost:10080/repo/openstack-ocata/
+gpgcheck=0
+exclude=sip,PyQt4
+
+[epel]
+name=Extra Packages for Enterprise Linux 7 - x86_64
+baseurl=http://localhost:10080/repo/fedora-epel/
+gpgcheck=0

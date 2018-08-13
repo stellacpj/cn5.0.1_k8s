@@ -1,0 +1,14 @@
+#!/bin/bash
+
+###############################################
+## fix the swift-ring-builder image variable ##
+###############################################
+sed -i "s/{{ docker_namespace }}/{{ docker_registry ~ '\/' if docker_registry else '' }}{{ docker_namespace }}/" \
+~/contrail-kolla-ansible/ansible/roles/swift/templates/swift-ring-builder.sh.j2
+
+##########################################
+## fix the UPDATE_IMAGES checking error ##
+##########################################
+sed -i 's/UPDATE_IMAGES != false/UPDATE_IMAGES |bool/' \
+~/contrail-ansible-deployer/playbooks/roles/install_contrail/tasks/*.yml
+

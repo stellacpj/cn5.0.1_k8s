@@ -1,0 +1,66 @@
+system {
+    host-name {{ pod }}-{{ item }}
+    management-instance;
+    root-authentication {
+        plain-text-password-value "{{ password.junos }}";
+        ssh-rsa "{{ lookup('file', 'jnpr_demo_id_rsa.pub') }}";
+    }
+    login {
+        user lab {
+            class super-user;
+            authentication {
+                plain-text-password-value "{{ password.junos }}";
+                ssh-rsa "{{ lookup('file', 'jnpr_demo_id_rsa.pub') }}";
+            }
+        }
+    }
+    services {
+        ssh {
+            root-login allow;
+        }
+        netconf {
+            ssh;
+        }
+    }
+    syslog {
+        user * {
+            any emergency;
+        }
+        file messages {
+            any notice;
+            authorization info;
+        }
+        file interactive-commands {
+            interactive-commands any;
+        }
+    }
+}
+chassis {
+    fpc 0 {
+        pic 0 {
+            tunnel-services {
+                bandwidth 1g;
+            }
+            interface-type xe;
+        }
+        lite-mode;
+    }
+}
+interfaces {
+    fxp0 {
+        unit 0 {
+            family inet {
+                address {{ ip[item] }}/{{ ip.mgmt |ipaddr('prefix') }};
+            }
+        }
+    }
+}
+routing-instances {
+    mgmt_junos {
+        routing-options {
+            static {
+                route 0.0.0.0/0 next-hop {{ ip.mgmt |ipaddr(1) |ipaddr('address') }};
+            }
+        }
+    }
+}

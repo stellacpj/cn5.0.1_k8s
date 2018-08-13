@@ -1,0 +1,48 @@
+interfaces {
+    xe-0/0/0 {
+        mtu 2000;
+        unit 0 {
+            family inet {
+                address {{ ip.overcloud.api |ipaddr(ip.start.vmx) }};
+            }
+        }
+    }
+    xe-0/0/1 {
+        unit 0 {
+            family inet {
+                address {{ ip.mx_ext |ipaddr(ip.start.vmx) }};
+            }
+            family mpls;
+        }
+    }
+    lo0 {
+        unit 0 {
+            family inet {
+                address {{ ip.vmx_loopback }}/32;
+            }
+        }
+    }
+}
+protocols {
+    mpls {
+        interface xe-0/0/1.0;
+    }
+    ospf {
+        export ospf-export;
+        area 0.0.0.0 {
+            interface lo0.0;
+            interface xe-0/0/0.0;
+        }
+    }
+    ldp {
+        interface xe-0/0/1.0;
+    }
+}
+policy-options {
+    policy-statement ospf-export {
+        term contrail_public {
+            from protocol static;
+            then accept;
+        }
+    }
+}

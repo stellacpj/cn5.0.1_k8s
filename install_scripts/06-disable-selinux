@@ -1,0 +1,12 @@
+#!/bin/bash
+
+for host in $(cat ~/contrail-ansible-deployer/config/all_hosts); do
+(./config/sshpass -p contrail123 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error $host <<'EOF'
+
+set enforce 0
+sed -i 's/^SELINUX=.*/SELINUX=permissive/' /etc/selinux/config
+
+EOF
+) &
+done
+wait

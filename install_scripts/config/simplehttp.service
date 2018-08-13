@@ -1,0 +1,13 @@
+[Unit]
+Description=Python Simple HTTP Server
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/var/tmp/www
+ExecStart=/usr/bin/python -m SimpleHTTPServer 10080
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target

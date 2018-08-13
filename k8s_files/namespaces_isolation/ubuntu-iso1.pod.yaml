@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ubuntuiso1
+  labels: 
+    app: ubuntuiso1
+spec:
+  containers:
+    - name: ubuntuiso1
+      image: ubuntu-upstart
+

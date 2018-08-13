@@ -1,0 +1,116 @@
+---
+- name: Download vMX image to libvirt folder
+  get_url:
+    url: "{{ image.image_url }}/{{ item.1.src }}"
+    dest: /var/lib/libvirt/images/{{ item.0 }}-{{ item.1.dest }}.img
+  with_nested:
+    - [ vmx, oc-vmx ]
+    -
+      - { src: "{{ image.vmx_re }}", dest: re }
+      - { src: "{{ image.vmx_re_hdd }}", dest: re-hdd }
+      - { src: "{{ image.vmx_re_usb }}", dest: re-usb }
+      - { src: "{{ image.vmx_pfe }}", dest: pfe }
+  loop_control:
+    label: "{{ item.0 }}-{{ item.1.dest }}"
+
+- name: Ensure temporary mount folder does not exist
+  file:
+    path: /tmp/{{ item }}
+    state: absent
+  with_items: [ vmx, oc-vmx ]
+
+- name: Create temporary mount folder
+  file:
+    path: /tmp/{{ item }}
+    state: directory
+  with_items: [ vmx, oc-vmx ]
+
+- name: Mount the config disk and untar file
+  shell: |
+    mount /var/lib/libvirt/images/{{ item }}-re-usb.img /tmp/{{ item }}
+    tar -C /tmp/{{ item }} --no-same-owner -xzf /tmp/{{ item }}/vmm-config.tgz
+    rm /tmp/{{ item }}/vmm-config.tgz
+  args:
+    warn: no
+  with_items: [ vmx, oc-vmx ]
+
+- name: Generate vMX base config
+  template:
+    src: base.conf.j2
+    dest: /tmp/{{ item }}/juniper.conf
+  with_items: [ vmx, oc-vmx ]
+
+- name: Tar file and umount config disk
+  shell: |
+    tar -C /tmp/{{ item }} -czf /tmp/{{ item }}/vmm-config.tgz ./
+    rm -rf /tmp/{{ item }}/boot /tmp/{{ item }}/juniper.conf
+    umount /tmp/{{ item }}
+  args:
+    warn: no
+  with_items: [ vmx, oc-vmx ]
+
+- name: Define vMX VM
+  virt:
+    name: "{{ item.0 }}-{{ item.1 }}"
+    command: define
+    xml: "{{ lookup('template', 'vmx_{{ item.1 }}.xml.j2') }}"
+  with_nested:
+    - [ vmx, oc-vmx ]
+    - [ re, pfe ]
+  loop_control:
+    label: "{{ item.0 }}-{{ item.1 }}"
+
+- name: Start vMX VM
+  virt:
+    name: "{{ item.0 }}-{{ item.1 }}"
+    state: running
+  with_nested:
+    - [ vmx, oc-vmx ]
+    - [ re, pfe ]
+  loop_control:
+    label: "{{ item.0 }}-{{ item.1 }}"
+
+- name: Check vMX SSH connection
+  wait_for:
+    host: "{{ ip[item] }}"
+    port: 22
+    timeout: 600
+  with_items: [ vmx, oc-vmx ]
+
+- name: Copy vMX license
+  copy:
+    src: vmx_license.lic
+    dest: /tmp
+
+- name: Install vMX license
+  juniper_install_license:
+    host: "{{ ip[item] }}"
+    port: 22
+    user: root
+    password: "{{ password.junos }}"
+    license: /tmp/vmx_license.lic
+  with_items: [ vmx, oc-vmx ]
+
+- name: Generate Junos Config
+  template:
+    src: "{{ item }}.conf.j2"
+    dest: /tmp/{{ item }}/{{ item }}.conf
+  with_items: [ vmx, oc-vmx ]
+
+- name: Load the Junos config
+  juniper_install_config:
+    host: "{{ ip[item] }}"
+    port: 22
+    user: root
+    passwd: "{{ password.junos }}"
+    file: /tmp/{{ item }}/{{ item }}.conf
+  with_items: [ vmx, oc-vmx ]
+
+- name: Remove temporary file
+  file:
+    path: /tmp/{{ item }}
+    state: absent
+  with_items:
+    - vmx_license.lic
+    - vmx
+    - oc-vmx
