@@ -3,9 +3,9 @@
 for host in $(cat ~/contrail-ansible-deployer/config/all_hosts); do
 
 (./config/sshpass -p contrail123 scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error -r \
-/config \
-/docker \
-/www \
+./config \
+./docker \
+./www \
 $host:/var/tmp) &
 
 done
