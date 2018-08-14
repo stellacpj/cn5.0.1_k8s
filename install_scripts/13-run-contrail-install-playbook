@@ -1,6 +1,6 @@
 #!/bin/bash
 
 pushd ~/contrail-ansible-deployer
-#ansible-playbook -i inventory/ -e orchestrator=kubernetes playbooks/configure_instances.yml
+ansible-playbook -i inventory/ -e orchestrator=kubernetes playbooks/configure_instances.yml
 ansible-playbook -i inventory/ -e orchestrator=kubernetes -e UPDATE_IMAGES=false playbooks/install_contrail.yml
 popd
