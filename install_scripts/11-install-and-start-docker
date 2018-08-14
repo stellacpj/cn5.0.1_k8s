@@ -3,8 +3,8 @@
 for host in $(cat ~/contrail-ansible-deployer/config/all_hosts); do
 (./config/sshpass -p contrail123 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error $host <<'EOF'
 
-yum -y install ./docker/docker*.rpm
-cp ./docker/docker-compose-Linux-x86_64 /usr/local/bin/docker-compose
+yum -y install /var/tmp/docker/docker*.rpm
+cp /var/tmp/docker/docker-compose-Linux-x86_64 /usr/local/bin/docker-compose
 chmod 0777 /usr/local/bin/docker-compose 
 systemctl start docker
 
