@@ -1,12 +1,13 @@
 ###########################################################################################
 ## Kubelet running on the Kubernetes master should NOT be configured with network plugin ##
+###########################################################################################
 sed -i '4s/^/#/' \
 /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
-###########################################################################################
 
-################################
-## Restarting the kubelet##
+#################################
+## Restarting the kubelet      ##
+#################################
 systemctl daemon-reload
 systemctl restart kubelet.service
 systemctl status kubelet.service
-#################################
+
