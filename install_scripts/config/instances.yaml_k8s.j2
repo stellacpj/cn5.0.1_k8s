@@ -1,0 +1,68 @@
+provider_config:
+  {{ install |lower }}:
+    {% if install == 'KVM' %}
+    image: CentOS-7-x86_64-kernel-3.10.0-693.21.1.qcow2
+    image_url: /root
+    vcpu: 12
+    vram: 49152
+    vdisk: 300G
+    subnet_prefix: {{ mgmt_network }}
+    subnet_netmask: {{ mgmt_netmask }}
+    gateway: {{ mgmt_gw }}
+    nameserver: {{ dns_server }}
+    {% if multi_intf %}
+    data_subnet_prefix: {{ data_network }}
+    data_subnet_netmask: {{ data_netmask }}
+    {% endif %}
+    {% endif %}
+    ntpserver: {{ ntp_server }}
+    domainsuffix: {{ dns_suffix }}
+    ssh_pwd: contrail123
+    ssh_user: root
+
+instances:
+  {% for n in node %}
+  {{ n }}:
+    provider: {{ install |lower }}
+    {% if install == 'KVM' %}
+    host: {{ kvm_host_address }}
+    bridge:
+    - {{ mgmt_bridge }}
+    {% if multi_intf %}
+    - {{ data_bridge }}
+    {% endif %}
+    {% endif %}
+    ip: {{ node_infos[n].mgmt_ip }}
+    {% if multi_intf %}
+    data_ip: {{ node_infos[n].data_ip }}
+    {% endif %}
+    roles:
+      {% if node_infos[n].role in ['all', 'control'] %}
+      config_database:
+      config:
+      control:
+      analytics_database:
+      analytics:
+      webui:
+      kubemanager:
+      k8s_master:
+      {% endif %}
+      {% if node_infos[n].role in ['all', 'compute'] %}
+      vrouter:
+      k8s_node:
+      {% endif %}
+  {% endfor %}
+
+global_configuration:
+  CONTAINER_REGISTRY: hub.juniper.net/contrail
+  CONTAINER_REGISTRY_USERNAME: *******
+  CONTAINER_REGISTRY_PASSWORD: *********
+
+contrail_configuration:
+  CONTRAIL_VERSION: 5.0.0-0.40
+  CLOUD_ORCHESTRATOR: kubernetes
+  {% if multi_intf %}
+  CONTROL_DATA_NET_LIST: {{ data_subnet }}
+  {% endif %}
+  VROUTER_GATEWAY: {{ vrouter_gw }}
+  RABBITMQ_NODE_PORT: 5673
